@@ -1,5 +1,3 @@
-
-
 datatype geom_exp = 
 	NoPoints
 | Point of real * real                     (* represents point (x,y) *)

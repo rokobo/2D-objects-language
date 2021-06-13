@@ -1,12 +1,4 @@
-(* University of Washington, Programming Languages, Homework 7
-   hw7testsprovided.sml *)
-(* Will not compile until you implement preprocess and eval_prog *)
-
-(* These tests do NOT cover all the various cases, especially for intersection *)
-
-use "hw7.sml";
-
-(* Must implement preprocess_prog and Shift before running these tests *)
+use "solution.sml";
 
 fun real_equal(x,y) = Real.compare(x,y) = General.EQUAL;
 
