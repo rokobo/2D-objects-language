@@ -22,9 +22,6 @@ fun real_close (r1,r2) =
 fun real_close_point (x1,y1) (x2,y2) = 
 		real_close(x1,x2) andalso real_close(y1,y2)
 
-(* helper function to return the Line or VerticalLine containing 
-   points (x1,y1) and (x2,y2) *)
-
 fun two_points_to_line (x1,y1,x2,y2) = 
 		if real_close(x1,x2)
 		then VerticalLine x1
@@ -36,13 +33,11 @@ fun two_points_to_line (x1,y1,x2,y2) =
 				Line(m,b)
 			end
 
-(* helper function for interpreter: return value that is the intersection
-   of the arguments. Do not call this function with non-values (e.g., shifts or lets) *)
 fun intersect (v1,v2) =
 		case (v1,v2) of
 	
-			(NoPoints, _) => NoPoints (* 5 cases *)
-		| (_, NoPoints) => NoPoints (* 4 additional cases *)
+			(NoPoints, _) => NoPoints 
+		| (_, NoPoints) => NoPoints 
 
 		| 	(Point p1, Point p2) => if real_close_point p1 p2
 			then v1
@@ -62,8 +57,8 @@ fun intersect (v1,v2) =
 
 		| (Line (m1,b1), Line (m2,b2)) => if real_close(m1,m2) 
 			then (if real_close(b1,b2)
-					then v1         (* same line *)
-					else  NoPoints) (* parallel lines do not intersect *)
+					then v1        
+					else  NoPoints) 
 			else 
 				let (* one-point intersection *)
 					val x = (b2 - b1) / (m1 - m2)
@@ -81,19 +76,15 @@ fun intersect (v1,v2) =
 
 		| (VerticalLine x1, VerticalLine x2) =>
 			if real_close(x1,x2)
-			then v1       (* same line *)
-			else NoPoints (* parallel *)
+			then v1       
+			else NoPoints 
 
 		| (VerticalLine _, LineSegment seg) => intersect(v2,v1)
 
 		| (LineSegment seg, _) => 
-			(* 4 cases because v2 could be a point, line, vertical line, or line segment *)
-			(* First compute the intersection of the line containing the segment 
-               and then v2. Then use that result to compute what we need. *)
 			(case intersect(two_points_to_line seg, v2) of
 					NoPoints => NoPoints 
-				| Point(x0,y0) => (* see if the point is within the segment bounds *)
-					(* assumes v1 was properly preprocessed *)
+				| Point(x0,y0) => 
 					let 
 						fun inbetween(v,end1,end2) =
 								(end1 - epsilon <= v andalso v <= end2 + epsilon)
@@ -104,19 +95,15 @@ fun intersect (v1,v2) =
 						then Point(x0,y0)
 						else NoPoints
 					end
-				| Line _ => v1         (* so segment seg is on line v2 *)
-				| VerticalLine _ => v1 (* so segment seg is on vertical-line v2 *)
+				| Line _ => v1        
+				| VerticalLine _ => v1
 				| LineSegment seg2 => 
-					(* case: seg and seg2 are on the same line (or vertical line), but they could be disjoint or 
-                       overlapping or one inside the other or just touching.And we treat vertical segments differently, 
-					   so there are 8 cases *)
 					let
 						val (x1start,y1start,x1end,y1end) = seg
 						val (x2start,y2start,x2end,y2end) = seg2
 					in
 						if real_close(x1start,x1end)
-						then (* the segments are on a vertical line *)
-							(* let segment a start at or below start of segment b *)
+						then
 							let 
 								val ((aXstart,aYstart,aXend,aYend),
 										(bXstart,bYstart,bXend,bYend)) = if y1start < y2start
@@ -124,15 +111,14 @@ fun intersect (v1,v2) =
 									else (seg2,seg)
 							in
 								if real_close(aYend,bYstart)
-								then Point (aXend,aYend) (* just touching *)
+								then Point (aXend,aYend) 
 								else if aYend < bYstart
-									then NoPoints        (* disjoint *)
+									then NoPoints      
 									else if aYend > bYend
-										then LineSegment(bXstart,bYstart,bXend,bYend) (* b inside a *)
-										else LineSegment(bXstart,bYstart,aXend,aYend) (* overlapping *)
+										then LineSegment(bXstart,bYstart,bXend,bYend) 
+										else LineSegment(bXstart,bYstart,aXend,aYend) 
 							end
-						else  (* the segments are on a (non-vertical) line *)
-							(* let segment a start at or to the left of start of segment b *)
+						else  
 							let 
 								val ((aXstart,aYstart,aXend,aYend),
 										(bXstart,bYstart,bXend,bYend)) = if x1start < x2start
@@ -140,24 +126,20 @@ fun intersect (v1,v2) =
 									else (seg2,seg)
 							in
 								if real_close(aXend,bXstart)
-								then Point (aXend,aYend) (* just touching *)
+								then Point (aXend,aYend) 
 								else if aXend < bXstart
-									then NoPoints        (* disjoint *)
+									then NoPoints      
 									else if aXend > bXend
-										then LineSegment(bXstart,bYstart,bXend,bYend) (* b inside a *)
-										else LineSegment(bXstart,bYstart,aXend,aYend) (* overlapping *)
+										then LineSegment(bXstart,bYstart,bXend,bYend) 
+										else LineSegment(bXstart,bYstart,aXend,aYend) 
 							end	
 					end						
 				| _ => raise Impossible "bad result from intersecting with a line")
 		| _ => raise Impossible "bad call to intersect: only for shape values"
 
-(* interpreter for our language: we assume the expression e has already been "preprocessed":
-    * line segments are not actually points 
-    * lines segment have left (or, if vertical, bottom) coordinate first *)
-
 fun eval_prog (e,env) =
 		case e of
-			NoPoints => e (* first 5 cases are all values*)
+			NoPoints => e
 		| Point _  => e
 		| Line _   => e
 		| VerticalLine _ => e
@@ -167,14 +149,14 @@ fun eval_prog (e,env) =
 					NONE => raise BadProgram("var not found: " ^ s)
 				| SOME (_,v) => v)
 		| Let(s,e1,e2) => eval_prog (e2, ((s, eval_prog(e1,env)) :: env))
-		| Intersect(e1,e2) => intersect(eval_prog(e1,env), eval_prog(e2, env))
+		| Intersect(e1,e2) => Intersect(eval_prog(e1,env), eval_prog(e2, env))
 		(* Problem 2 *)
 		| Shift(dx, dy, e1) => 
 			case eval_prog(e1, env) of
 				Point (x1, y1) => Point(x1 + dx, y1 + dy)
 			| Line(m1, b1) => Line(m1, b1 + dy - (m1 * dx))
 			| VerticalLine(x1) => VerticalLine(x1 + dx)
-			| LineSegment(x1, y1, x2, y2) => LineSegment(x1, y1, x2 + dx, y2 + dy)
+			| LineSegment(x1, y1, x2, y2) => LineSegment(x1 + dx, y1 + dy, x2 + dx, y2 + dy)
 			| NoPoints => NoPoints
 			| _ => raise Impossible("Shift applied to wrong object")
 		
@@ -192,7 +174,10 @@ fun preprocess_prog (e) =
 						then LineSegment(x1, y1, x1, y2)
 						else LineSegment(x1, y2, x1, y1)
 					else 
-						if x2 > x1
+						if x2 < x1
 						then LineSegment(x2, y2, x1, y1)
 						else e
+		| Intersect(e1, e2) => Intersect(preprocess_prog(e1), preprocess_prog(e2))
+    | Let(s, e1, e2) => Let(s, preprocess_prog(e1), preprocess_prog(e2))
+    | Shift(dx, dy, e1) => Shift(dx, dy, preprocess_prog(e1))
 		| _ => e
