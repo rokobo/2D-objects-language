@@ -149,7 +149,7 @@ fun eval_prog (e,env) =
 					NONE => raise BadProgram("var not found: " ^ s)
 				| SOME (_,v) => v)
 		| Let(s,e1,e2) => eval_prog (e2, ((s, eval_prog(e1,env)) :: env))
-		| Intersect(e1,e2) => Intersect(eval_prog(e1,env), eval_prog(e2, env))
+		| Intersect(e1,e2) => eval_prog(intersect(eval_prog(e1,env), eval_prog(e2, env)), env)
 		(* Problem 2 *)
 		| Shift(dx, dy, e1) => 
 			case eval_prog(e1, env) of
@@ -178,6 +178,6 @@ fun preprocess_prog (e) =
 						then LineSegment(x2, y2, x1, y1)
 						else e
 		| Intersect(e1, e2) => Intersect(preprocess_prog(e1), preprocess_prog(e2))
-    | Let(s, e1, e2) => Let(s, preprocess_prog(e1), preprocess_prog(e2))
-    | Shift(dx, dy, e1) => Shift(dx, dy, preprocess_prog(e1))
+		| Let(s, e1, e2) => Let(s, preprocess_prog(e1), preprocess_prog(e2))
+		| Shift(dx, dy, e1) => Shift(dx, dy, preprocess_prog(e1))
 		| _ => e
