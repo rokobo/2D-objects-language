@@ -38,6 +38,8 @@ class GeometryValue
     np
   end
 
+  # Used as step in double dispatch. Converts line segment to line in order to
+  # make calculations easier (this forces additional verification methods)
   def intersectLineSegment(seg)
     line_result = intersect(two_points_to_line(seg.x1, seg.y1, seg.x2, seg.y2))
     line_result.intersectWithSegmentAsLineResult seg
@@ -275,7 +277,7 @@ class LineSegment < GeometryValue
   end
 
   def intersect(other)
-    other.preprocess_prog.intersectWithSegmentAsLineResult preprocess_prog
+    other.preprocess_prog.intersectLineSegment self
   end
 
   def intersectPoint(p)
@@ -286,7 +288,7 @@ class LineSegment < GeometryValue
     line.intersectLineSegment self
   end
 
-  def intersectVerticalLine(_vline)
+  def intersectVerticalLine(vline)
     vline.intersectLineSegment self
   end
 
